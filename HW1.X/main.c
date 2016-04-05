@@ -64,6 +64,13 @@ int main() {
     while(1) {
 	    // use _CP0_SET_COUNT(0) and _CP0_GET_COUNT() to test the PIC timing
 		// remember the core timer runs at half the CPU speed
+        while(PORTBbits.RB4 == 0){} //wait while USER button is pressed
+        _CP0_SET_COUNT(0);
+        LATAbits.LATA4 = 1; // RA4 is set high
+        while (_CP0_GET_COUNT() < 12000){} // wait for 0.5ms
+        LATAbits.LATA4 = 0; // RA4 is set low
+        while (_CP0_GET_COUNT() < 24000){} // wait for 0.5ms
+        
     }
     
     
