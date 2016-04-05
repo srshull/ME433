@@ -37,6 +37,7 @@
 #pragma config FVBUSONIO = ON // USB BUSON controlled by USB module
 
 
+
 int main() {
 
     __builtin_disable_interrupts();
@@ -54,7 +55,10 @@ int main() {
     DDPCONbits.JTAGEN = 0;
     
     // do your TRIS and LAT commands here
-    
+    TRISBbits.TRISB4 = 1; // RB4 is an input
+    TRISAbits.TRISA4 = 0; // RA4 is an output
+    LATAbits.LATA4 = 1; // RA4 is set high
+            
     __builtin_enable_interrupts();
     
     while(1) {
