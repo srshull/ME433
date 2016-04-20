@@ -61,8 +61,16 @@ unsigned char spi_io(unsigned char o) {
   return SPI1BUF;
 }
 
+ int abval(int val) //basic absolute value function I found online
+ { 
+     return (val<0 ? (-val) : val);
+ } 
+
 int main() {
-    unsigned short data = 0x71FF;
+    unsigned short testVal;
+    unsigned short message;
+    int i;
+ 
     __builtin_disable_interrupts();
 
     // set the CP0 CONFIG register to indicate that kseg0 is cacheable (0x3)
@@ -70,7 +78,7 @@ int main() {
 
     // 0 data RAM access wait states
     BMXCONbits.BMXWSDRM = 0x0;
-
+ 
     // enable multi vector interrupts
     INTCONbits.MVEC = 0x1;
 
@@ -83,8 +91,18 @@ int main() {
     LATAbits.LATA4 = 1; // RA4 is set high
     initSPI1(); 
     __builtin_enable_interrupts();
-    CS = 0;
-    spi_io((data & 0xFF00) >> 8 ); // most significant byte of data
-    spi_io(data & 0x00FF);         // the least significant data byte
-    CS = 1;
+
+    while(1){
+        for (i=0; i<200; i++){
+            testVal=2.55*(100-abval(i%200-100));
+            message = (testVal<<4) | 0xF000;
+            CS = 0;
+            spi_io((message & 0xFF00) >> 8 ); // most significant byte of data
+            spi_io(message & 0x00FF);
+            CS = 1;
+            _CP0_SET_COUNT(0);
+            while (_CP0_GET_COUNT() < 24000){} // wait for 1ms
+            
+        }
+    }
 }
