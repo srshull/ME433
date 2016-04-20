@@ -1,5 +1,6 @@
 #include<xc.h>           // processor SFR definitions
 #include<sys/attribs.h>  // __ISR macro
+#include "MCP4902.h"
 
 // DEVCFG0
 #pragma config DEBUG = OFF // no debugging
@@ -36,30 +37,6 @@
 #pragma config FUSBIDIO = ON // USB pins controlled by USB module
 #pragma config FVBUSONIO = ON // USB BUSON controlled by USB module
 
-#define CS LATBbits.LATB15
-
-void initSPI1(){
-    SDI1Rbits.SDI1R = 0b0000; // SDI1 on pin A1
-    RPB13Rbits.RPB13R = 0b0011; // SD01 on pin B13
-    TRISBbits.TRISB15 = 0; // RB15 is an output (SS pin)
-    CS = 1; 
-    SPI1CON = 0;              // turn off the spi module and reset it
-    SPI1BUF;                  // clear the rx buffer by reading from it
-    SPI1BRG = 0x3;            // baud rate to 10 MHz [SPI4BRG = (80000000/(2*desired))-1]
-    SPI1STATbits.SPIROV = 0;  // clear the overflow bit
-    SPI1CONbits.CKE = 1;      // data changes when clock goes from hi to lo (since CKP is 0)
-    SPI1CONbits.MSTEN = 1;    // master operation
-    SPI1CONbits.ON = 1;       // turn on spi 4
-
-}
-
-unsigned char spi_io(unsigned char o) {
-  SPI1BUF = o;
-  while(!SPI1STATbits.SPIRBF) { // wait to receive the byte
-    ;
-  }
-  return SPI1BUF;
-}
 
  int abval(int val) //basic absolute value function I found online
  { 
@@ -67,8 +44,7 @@ unsigned char spi_io(unsigned char o) {
  } 
 
 int main() {
-    unsigned short testVal;
-    unsigned short message;
+    char val;
     int i;
  
     __builtin_disable_interrupts();
@@ -94,12 +70,8 @@ int main() {
 
     while(1){
         for (i=0; i<200; i++){
-            testVal=2.55*(100-abval(i%200-100));
-            message = (testVal<<4) | 0xF000;
-            CS = 0;
-            spi_io((message & 0xFF00) >> 8 ); // most significant byte of data
-            spi_io(message & 0x00FF);
-            CS = 1;
+            val=2.55*(100-abval(i%200-100));
+            setVoltage(1,val); //set voltage on channel B
             _CP0_SET_COUNT(0);
             while (_CP0_GET_COUNT() < 24000){} // wait for 1ms
             
