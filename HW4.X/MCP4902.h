@@ -12,7 +12,7 @@ void initSPI1();
  * channel: 0 for A, 1 for B
  * voltage: a value between 0-255
  */
-void setVoltage(char channel, char voltage);
+void setVoltage(char channel, unsigned char voltage);
 
 
 #endif

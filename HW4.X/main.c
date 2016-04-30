@@ -1,6 +1,10 @@
 #include<xc.h>           // processor SFR definitions
 #include<sys/attribs.h>  // __ISR macro
+#include<math.h>
 #include "MCP4902.h"
+#include "i2c_master_noint.h"
+
+#define EXPANDER_ADDR 0b0100000 //address of pin expander
 
 // DEVCFG0
 #pragma config DEBUG = OFF // no debugging
@@ -38,6 +42,44 @@
 #pragma config FVBUSONIO = ON // USB BUSON controlled by USB module
 
 
+// function prototypes
+void setExpander(char pin, char level);
+char readAllPins(void);
+int abval(int val);
+
+//set a pin high (1) or low (0) on the pin expander. Pins must already be
+// configured as outputs.
+void setExpander(char pin, char level){
+    char currentLevels;
+    currentLevels = readAllPins();
+    i2c_master_start();    
+    i2c_master_send(EXPANDER_ADDR << 1);
+    i2c_master_send(0x0A); // send address of OLAT register
+    if (level == 1){
+        i2c_master_send(1 << pin | currentLevels); // make pin high
+    }
+    else if (level == 0){
+        i2c_master_send(~(1 << pin) & currentLevels); // make pin low
+    }
+    i2c_master_stop();
+      
+}
+
+char readAllPins(void){
+    char levels;
+    i2c_master_start();    
+    i2c_master_send(EXPANDER_ADDR << 1); 
+    i2c_master_send(0x09); // send address of GPIO register
+    i2c_master_restart();  // send a RESTART so we can begin reading 
+    i2c_master_send((EXPANDER_ADDR << 1) | 1); //1 in LSB indicating read
+    levels = i2c_master_recv();       // receive a byte from the bus
+    i2c_master_ack(1); // send NACK - don't want any more bytes
+    i2c_master_stop();// send stop
+    return levels;
+}
+
+
+
  int abval(int val) //basic absolute value function I found online
  { 
      return (val<0 ? (-val) : val);
@@ -46,6 +88,8 @@
 int main() {
     char val;
     int i;
+    int j=0;
+    char pinStates;
  
     __builtin_disable_interrupts();
 
@@ -66,12 +110,37 @@ int main() {
     TRISAbits.TRISA4 = 0; // RA4 is an output (user LED)
     LATAbits.LATA4 = 1; // RA4 is set high
     initSPI1(); 
+    ANSELBbits.ANSB2 = 0; // turn off analog in for B2
+    ANSELBbits.ANSB3 = 0; // turn off analog in for B3
+    
+    i2c_master_setup();
     __builtin_enable_interrupts();
-
+    
+    i2c_master_start();                     // Begin the start sequence
+    i2c_master_send(EXPANDER_ADDR << 1); // send device address shifted left by 1 bit
+                                        // to indicate a write
+    i2c_master_send(0x00); // send address of IODIR register
+    i2c_master_send(0xF0); // configure GP0-3 as outputs and GP4-7 as inputs
+    i2c_master_stop();
+   
     while(1){
+        
+        
         for (i=0; i<200; i++){
+            
+            pinStates = readAllPins();
+            if (pinStates & 0b10000000) {
+                setExpander(0, 1);
+            }
+            else setExpander(0, 0);
+            
             val=2.55*(100-abval(i%200-100));
-            setVoltage(1,val); //set voltage on channel B
+            setVoltage(0,val); //set voltage on channel B
+            setVoltage(1,(127+127*sin(j/12.56637)));
+            j=j+1;;
+            if(j==79){
+                j=0;  
+            }
             _CP0_SET_COUNT(0);
             while (_CP0_GET_COUNT() < 24000){} // wait for 1ms
             

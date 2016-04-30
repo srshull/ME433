@@ -24,7 +24,7 @@ void initSPI1(){
 
 }
 
-void setVoltage(char channel, char voltage){
+void setVoltage(char channel, unsigned char voltage){
     unsigned short data = voltage;
     if (channel == 0) {//0 is channel A
         data = (data << 4) | 0x7000;
