@@ -65,6 +65,18 @@ int main() {
     ANSELBbits.ANSB3 = 0; // turn off analog in for B3
     
     i2c_master_setup();
+    
+    T3CONbits.ON=0; // timer 3 off
+	T3CONbits.TCKPS=0; // prescaler = 1 
+	PR3=47999; // gives us 1kHz frequency
+	T3CONbits.ON=1; // timer 3 on
+  
+	OC1CONbits.OCTSEL=1; // use timer 3 for output compare
+	OC1CONbits.OCM=6; // simple PWM mode, no fault pin
+	OC1R= 24000; // sets the duty cycle
+	OC1RS= 24000; // sets the future duty cycle
+    RPA0Rbits.RPA0R = 0b0101; //OC1 on A0
+	OC1CONbits.ON=1; // output compare 1 on
     __builtin_enable_interrupts();
     
     i2c_master_start();
