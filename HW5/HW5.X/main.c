@@ -38,9 +38,27 @@
 #pragma config FVBUSONIO = ON // USB BUSON controlled by USB module
 
 
+void drawCharacter(unsigned short x, unsigned short y, char character){
+    int i=0;
+    int j;
+    for (i=0; i<5; i++){
+        for (j=0; j<8; j++){
+            if (ASCII[character-0x20][i] & 1<<j){
+                LCD_drawPixel(x+i,y+j,BLACK);
+            }
+            else {
+                LCD_drawPixel(x+i,y+j,WHITE);
+            }
+        }
+    }
+}
+
 
 int main() {
     int i=0;
+    int x=1;
+    int y=1;
+    int leet=1337;
     __builtin_disable_interrupts();
 
     // set the CP0 CONFIG register to indicate that kseg0 is cacheable (0x3)
@@ -63,14 +81,16 @@ int main() {
     LCD_init();
     LCD_clearScreen(WHITE);
     __builtin_enable_interrupts();
-    for (i=1; i<120; i++){
-        LCD_drawPixel(60,i,RED);
-        LCD_drawPixel(61,i,RED);
-        LCD_drawPixel(62,i,RED);
-        LCD_drawPixel(63,i,RED);
-        LCD_drawPixel(64,i,RED);
-    }
-    
+  
+    drawCharacter(1,1,'S');
+    drawCharacter(8,1,'H');
+    drawCharacter(15,1,'U');
+    drawCharacter(22,1,'L');
+    drawCharacter(29,1,'L');
+    char message[20];
+    sprintf(message, "Hello World %d!", leet);
+    while(message[i]){drawCharacter(28+6*i,32,message[i]); i++;}
+  
     while(1) {
     }
 }
