@@ -37,7 +37,7 @@
 #pragma config FUSBIDIO = ON // USB pins controlled by USB module
 #pragma config FVBUSONIO = ON // USB BUSON controlled by USB module
 
-
+/*
 void drawCharacter(unsigned short x, unsigned short y, char character){
     int i=0;
     int j;
@@ -53,12 +53,18 @@ void drawCharacter(unsigned short x, unsigned short y, char character){
     }
 }
 
+void writeString(unsigned short x, unsigned short y, char* message){
+    int i = 0;
+    while(message[i]){drawCharacter(x+6*i,y,message[i]); i++;}
+    
+}
+*/
 
 int main() {
     int i=0;
     int x=1;
     int y=1;
-    int leet=1337;
+    int leet=15189;
     __builtin_disable_interrupts();
 
     // set the CP0 CONFIG register to indicate that kseg0 is cacheable (0x3)
@@ -82,15 +88,12 @@ int main() {
     LCD_clearScreen(WHITE);
     __builtin_enable_interrupts();
   
-    drawCharacter(1,1,'S');
-    drawCharacter(8,1,'H');
-    drawCharacter(15,1,'U');
-    drawCharacter(22,1,'L');
-    drawCharacter(29,1,'L');
-    char message[20];
-    sprintf(message, "Hello World %d!", leet);
-    while(message[i]){drawCharacter(28+6*i,32,message[i]); i++;}
+    char message[50];
   
+    sprintf(message, "It Works! %d!", leet);
+    //while(message[i]){drawCharacter(28+6*i,32,message[i]); i++;}
+    LCD_writeString(1,1,message);
+    LCD_writeString(1,10,message);
     while(1) {
     }
 }
