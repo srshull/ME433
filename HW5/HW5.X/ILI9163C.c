@@ -166,8 +166,11 @@ void LCD_init() {
 
 void LCD_drawPixel(unsigned short x, unsigned short y, unsigned short color) {
     // check boundary
-    LCD_setAddr(x,y,x+1,y+1);
-    LCD_data16(color);
+    if(x<127 & y<127){
+        LCD_setAddr(x,y,x+1,y+1);
+        LCD_data16(color);
+    }
+    
 }
 
 void LCD_setAddr(unsigned short x0, unsigned short y0, unsigned short x1, unsigned short y1) {
