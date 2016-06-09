@@ -54,8 +54,11 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 // *****************************************************************************
 
 #include "app.h"
-#define kp 85
+#define kp 120
 #define kd 0
+#define ki 3
+#define MAXSPD 40999
+#define INTWINDOW 100
 
 int ii;
 int pos;
@@ -65,7 +68,8 @@ int qq;
 int txFlag;
 int error;
 int reduction;
-//int errorint=0;
+
+int errorint=0;
 int errorprev =0;
 // *****************************************************************************
 // *****************************************************************************
@@ -133,7 +137,7 @@ USB_DEVICE_CDC_EVENT_RESPONSE APP_USBDeviceCDCEventHandler
 
             /* This means the host wants to set the line coding.
              * This is a control transfer request. Use the
-             * USB_DEVICE_ControlReceive() function to receive the
+              * USB_DEVICE_ControlReceive() function to receive the
              * data from the host */
 
             USB_DEVICE_ControlReceive(appDataObject->deviceHandle,
@@ -494,29 +498,34 @@ void APP_Tasks ( void )
                         pos = 0;
                         sscanf(rx,"%d",&qq);
                         error = 310-qq;
+                        if (error<INTWINDOW && error>-INTWINDOW) errorint = 0;
      
 //                        if (reduction<0){
 //                            reduction = 0;
 //                        }
                         
                         if (error>0){ //left wheel needs to slow down
-                            reduction = kp*error+kd*(errorprev-error);
-                            OC2RS = 47999;
-                            OC1RS = 47999-reduction;
+                            errorint = errorint + error;
+                            reduction = kp*error+kd*(errorprev-error)+ki*errorint;
+                            if (reduction >= MAXSPD || reduction <0) reduction = MAXSPD;
+                            OC2RS = MAXSPD;
+                            OC1RS = MAXSPD-reduction;
                         }
                         else if (error<0) {
                             error=-1*error;
-                            reduction = kp*error+kd*(errorprev-error);
-                            OC1RS = 47999;
-                            OC2RS = 47999-reduction;
+                            errorint = errorint + error;
+                            reduction = kp*error+kd*(errorprev-error)+ki*errorint;
+                            if (reduction >= MAXSPD || reduction <0) reduction = MAXSPD;
+                            OC1RS = MAXSPD;
+                            OC2RS = MAXSPD-reduction;
                         }
                         else {
-                            OC2RS = 47999;
-                            OC1RS = 47999;
+                            OC2RS = MAXSPD;
+                            OC1RS = MAXSPD;
                             
                         }
                         errorprev = error;
-                        
+                        //if (error<20) errorint = 0;
                     }
                     else {
                         rx[pos] = appData.readBuffer[ii];
