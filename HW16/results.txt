@@ -1,0 +1,6 @@
+My app did not use any sliders. I hardcoded a threshold for determining what was brown and what was green that worked well in all lighting conditions. If I did the project again, I would have added sliders to adjust the gains for my PI controller. As it was, I tuned the gains be reprogramming the PIC each time I wanted to change a value (pretty annoying).
+
+The only thing the app sent to the PIC was the location of the center of the line. The PIC then used a PI controller to try to keep the center of the line in the middle of the screen (i.e. pixel column 310). Using only proportional control worked OK, but adding the integral term really helped on the sharper turns. The error accumulation when the robot hit a sharp turn helped it to adjust quickly. The integrated error was then reset when the robot re-centered itself.
+
+A video of my robot performing a lap of the track can be seen here:
+https://drive.google.com/open?id=0B34RHZdU3FbdazdiT21YRVlOQ2c
